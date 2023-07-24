@@ -56,6 +56,11 @@ end
 "X_{i-1}"
 struct XnegiExp <: Exp end
 
+"X_{i-j}"
+struct XnegjExp <: Exp
+  j::IntLiteral
+end
+
 "Current index `i`"
 struct CurrentIndexExp <: Exp end
 
@@ -77,6 +82,10 @@ function example_program_2()
   Program(IntLiteral(2), MulExpr(XnegiExp(), XnegiExp()))
 end
 
+## Example fibbonaci
+function fibbonaci_program()
+  Program(IntLiteral(0), AddExpr(XnegiExp(), XnegjExp(IntLiteral(2))))
+end
 
 "Pretty print a program `p`"
 function pretty_print(p::Program)
@@ -90,6 +99,8 @@ function pretty_print(e::Exp)
     return string(e.value)
   elseif e isa XnegiExp
     return "x_{i-1}"
+  elseif e isa XnegjExp
+    return string("x_{i-", e.j.value, "}")
   elseif e isa CurrentIndexExp
     return "i"
   elseif e isa MulExpr
@@ -108,25 +119,28 @@ function interpret(p::Program, nsteps)
   x0 = p.x0exp.value
   xi = x0
   values = [xi]
+  hist = [xi]
   for i in 1:nsteps - 1
-    xi = interpret_exp(p.XiExp, xi, i)  # pass current index to the interpreter
+    xi = interpret_exp(p.XiExp, hist, i)  # pass current index to the interpreter
     push!(values, xi)
   end
   return values
 end
 
 "Interpret the expression `e` given a value for `x_{i-1}`"
-function interpret_exp(p::Exp, xi_1, i)
+function interpret_exp(p::Exp, hist, i)
   if p isa IntLiteral
     return p.value
   elseif p isa XnegiExp
-    return xi_1
+    return hist[end]
+  elseif p isa XnegjExp
+    return hist[end - p.j.value]
   elseif p isa CurrentIndexExp
     return i
   elseif p isa MulExpr
-    return interpret_exp(p.left, xi_1, i) * interpret_exp(p.right, xi_1, i)
+    return interpret_exp(p.left, hist, i) * interpret_exp(p.right, hist, i)
   elseif p isa AddExpr
-    return interpret_exp(p.left, xi_1, i) + interpret_exp(p.right, xi_1, i)
+    return interpret_exp(p.left, hist, i) + interpret_exp(p.right, hist, i)
   else
     error("Unknown expression type $(typeof(p))")
   end
@@ -149,6 +163,8 @@ function sample_exp(rng, maxn = 10)
     return IntLiteral(rand(rng, 0:maxn))
   elseif p < 0.5
     return XnegiExp()
+  elseif p < 0.66
+    return XnegjExp(IntLiteral(rand(rng, 0:maxn)))
   elseif p < 0.66
     return CurrentIndexExp()
   elseif p < 0.75
