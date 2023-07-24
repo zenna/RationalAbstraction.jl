@@ -1,0 +1,11 @@
+name = "SemanticPriors"
+uuid = "cc421328-837d-4803-95cb-4ad5b1e155d8"
+authors = ["Zenna Tavares <zennatavares@gmail.com>"]
+version = "0.1.0"
+
+[deps]
+HTTP = "cd3eb016-35fb-5094-929b-558a96fad6f3"
+JSON = "682c06a0-de6a-54ab-a142-c8b1cf79cde6"
+ProgressLogging = "33c8b6b6-d38a-422a-b730-caa89a2f386c"
+Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
+Spec = "b8ccf107-3a88-5e0f-823b-b838c6a0f327"

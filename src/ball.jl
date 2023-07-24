@@ -188,30 +188,21 @@ end
 ubatch(predicted::Array, actual::Array, query::WhereWillBallEnd) =
   Flux.mse(predicted, reshape(actual, (1, :)))
 
-## FIrst let's create a neural network for the abstraction function α
-function train_ball(; batch_size=10, embedding_size=10, abstraction_size=10, output_size=1)
-  rng = MersenneTwister(1234)
+function train_ball(rng = MersenneTwister(1234); batch_size=10, embedding_size=10, abstraction_size=10)
   embed_(x) = embed(x, EmbedAsVector{Float64}())
   embed_prob_len = length(embed(generate_random_problem(rng), EmbedAsVector{Float64}()))
-  abstraction_size = 10
-  s_range_len = 10 # THis should be 
 
   ## Create the neural networks
   α = Chain(Dense(embed_prob_len, 5, relu), Dense(5, abstraction_size), softmax)
-  ŝ = Chain(Dense(abstraction_size, 5, relu), Dense(5, s_range_len, relu))
 
+  # Solver
   s_shared_inner_layer_size = 5
   ŝ_shared = Dense(abstraction_size, s_shared_inner_layer_size, relu)
-  # Boolean part should 
   ŝ_bool = Chain(Dense(s_shared_inner_layer_size, 1, sigmoid))
-
-  # Real part should be a linear layer
   ŝ_real = Chain(Dense(s_shared_inner_layer_size, 1))
 
   ss = Dict(WillBallPassLine() => Chain(α, ŝ_shared, ŝ_bool),
             WhereWillBallEnd() => Chain(α, ŝ_shared, ŝ_real))
-
-  # Is this correct? 
 
   s(prob) = simulate(prob.model, prob.query)
   train!(rng, s, ss, ubatch, ProblemRv(), embed_; batch_size = batch_size)
